@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Redwood.Utils
+namespace Redwood
 {
     // 수신 스레드와 메인 스레드 충돌을 방지하기 위한 파이프
     public class ReceivePipe
@@ -49,7 +49,6 @@ namespace Redwood.Utils
         }
 
         // 연결 아이디에 맞는 큐 메시지의 크기를 반환
-        // 통계적인 이유로 크기를 불러오지 말것.
         // for statistics. don't call Count and assume that it's the same after the call.
         public int Count(int connectionId)
         {
