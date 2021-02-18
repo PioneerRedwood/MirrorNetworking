@@ -76,7 +76,7 @@ namespace Redwood
         public bool Active => listenerThread != null && listenerThread.IsAlive;
 
         // 생성자
-        public Server(int MaxMessageSize) : base(MaxMessageSize) { }
+        public Server(int MaxMessageSize = 1024) : base(MaxMessageSize) { }
 
         // listener 스레드의 listen 함수
         // 노트: 최대 연결에 대한 매개 변수는 없음. High level API 쪽에서 처리해야함
@@ -212,30 +212,169 @@ namespace Redwood
 
         public void Stop()
         {
+            if(!Active)
+            {
+                return;
+            }
 
+            // client 연결을 끊은 상태라면 어떠한 연결도 할 수 없으니 연결에 대한 listening을 멈춰야 함
+            listener?.Stop();
+
+            // 모든 자원을 두고 listener 스레드를 죽임
+            // Stop 바로 다음에 .Active가 false임을 보장
+            // .Join을 호출하는 것은 때로 영원히 대기함
+            listenerThread?.Interrupt();
+            listenerThread = null;
+
+            // 모든 clients 연결 해제
+            foreach(KeyValuePair<int, ConnectionState> kvp in clients)
+            {
+                TcpClient client = kvp.Value.client;
+
+                // stream이 닫혀있지 않으면 닫음. 아마 disconnect에 의해 이미 닫혔을 것
+                // try catch 문 사용
+                try { client.GetStream().Close(); } catch { }
+                client.Close();
+            }
+
+            // clients 리스트 정리
+            clients.Clear();
+
+            // 재시작할 경우를 위해 카운터 초기화
+            // 새로운 연결에서부턴 1부터 연결 아이디 생성
+            counter = 0;
         }
 
+        // 소켓 연결을 사용한 client에 메시지 전송
+        // ArraySegment for allocation free sends later
+        // -> the segment's array is only used until Send() returns!
         public bool Send(int connectionId, ArraySegment<byte> message)
         {
+            // 최대 메시지 크기를 통해 할당 공격을 방지
+            if(message.Count <= MaxMessageSize)
+            {
+                // 연결 탐색
+                if(clients.TryGetValue(connectionId, out ConnectionState connection))
+                {
+                    // 전송 파이프 제한 확인
+                    if(connection.sendPipe.Count < SendQueueLimit)
+                    {
+                        // 스레드 안전을 위해 전송 파이프 추가와 반환을 바로
+                        // 여기서 전송하면 다른 쪽에서 렉 걸렸거나 disconnected됐다면 매우 긴 시간동안 blocking될 수 있음
+                        connection.sendPipe.Enqueue(message);
+                        connection.sendPending.Set(); // interrupt SendThread WaitOne()
+                        return true;
+                    }
 
+                    // 전송 큐가 너무 큰 상태라면 disconnect
+                    // -> 입력보다 네트워크로 인한 큐 메모릭 부하 방지
+                    // -> 로드 밸런싱 처리를 위해 연결 해제는 훌륭한 방식
+                    //
+                    // 노트: 전송 스레드는 한번에 전송 큐를 즉시 처리한다해도 
+                    //      여전히 오랫동안 전송 큐가 너무 커져버리는 sending blocks가 발생 가능.. 한계가 있음
+                    else
+                    {
+                        // log the reason
+                        Log.Warning($"Server.Send: sendPipe for connection {connectionId} reached limit of {SendQueueLimit}. " +
+                            $"This can happen if we call send faster than the network can process messages. Disconnecting this connection for load balancing.");
+
+                        // 연결은 닫음. 전송 스레드는 휴면 상태로 
+                        connection.client.Close();
+                        return false;
+                    }
+                }
+
+                // 가끔 유효하지 않은 연결 아이디로 전송하기도 함
+                // 가령, client가 연결이 해제 상태면 
+                // 서버는 다시 GetNextMessages를 호출하기 전에 프레임 하나를 전송할 것이고 이때서야 연결이 해제됨을 알아차림
+                // 그러므로 log 메시지를 통한 스팸 메시지는 보내지 않도록
+                //Logger.Log("Server.Send: invalid connectionId: " + connectionId); // 해당 부분은 아예 삭제된 클래스를 사용하는 부분
+                return false;
+            }
+            Log.Error($"Server.Send: message too big: {message.Count}. Limit: {MaxMessageSize}");
             return false;
         }
 
+
+        // 서버 입장에선 클라이언트 IP가 필요. 예로 정지시킬때
         public string GetClientAddress(int connectionId)
         {
-
+            // 연결 탐색
+            if(clients.TryGetValue(connectionId, out ConnectionState connection))
+            {
+                return ((IPEndPoint)connection.client.Client.RemoteEndPoint).Address.ToString();
+            }
             return "";
         }
 
+        // disconnect (kick) a client
         public bool Disconnect(int connectionId)
         {
-
+            // 연결 탐색
+            if(clients.TryGetValue(connectionId, out ConnectionState connection))
+            {
+                // 연결 닫고 전송 스레드는 휴면
+                connection.client.Close();
+                Log.Info($"Server.Disconnect connectionId: {connectionId}");
+                return true;
+            }
             return false;
         }
 
+        // tick: 각 연결에 'limit'만큼의 메시지들을 처리
+        // => 네트워크 부하로 서버와 클라이언트가 교착상태와 오랜 기간 얼어붙는 것을 피하도록 제한 파라미터를 둠
+        // => Mirror와 DOTSNET에선 어쨌든 프로세스 제한이 필요하며 여기서 하면 편함
+        // => 처리할 남은 메시지의 양을 반환하므로 호출자가 필요한 만큼 호출할 수 있음, processLimit
+        //
+        // Tick() 여러 메시지를 처리하지만 만약 씬을 바꾸는 메시지가 들어왔을 때 즉시 멈출 방법이 필요
+        // Mirror는 씬 변환 시 처리할 수 있는게 없음 (다른 것에도 유용할 수 있음)
+        // => 전송에서 람다를 한 번만 할당하도록 
         public int Tick(int processLimit, Func<bool> checkEnabled = null)
         {
+            // start() 이후에만 가능
+            if(receivePipe == null)
+            {
+                return 0;
+            }
 
+            // "processLimit"만큼만 연결에 대한 처리
+            for(int i = 0; i < processLimit; ++i)
+            {
+                // Mirror 씬 변환 메시지가 도착했는지 확인
+                if(checkEnabled != null && !checkEnabled())
+                {
+                    break;
+                }
+
+                // 제거하기 전에 일단 첫번째 큐에 들어간 항목이 있는지
+                if(receivePipe.TryPeek(out int connectionId, out EventType eventType, out ArraySegment<byte> message))
+                {
+                    switch(eventType)
+                    {
+                        case EventType.Connected:
+                            OnConnected?.Invoke(connectionId);
+                            break;
+                        case EventType.Data:
+                            OnData?.Invoke(connectionId, message);
+                            break;
+                        case EventType.Disconnected:
+                            OnDisconnected?.Invoke(connectionId);
+                            // 마지막 연결 해제 메시지가 처리 됐을 때 연결 해제된 연결을 제거
+                            clients.TryRemove(connectionId, out ConnectionState _);
+                            break;
+                    }
+
+                    // 중요! 지금 해당 이벤트를 처리한 다음이니 dequeue와 pool에서 반환을 함
+                    receivePipe.TryDequeue();
+                }
+                // 더 이상의 메시지는 없으니 루프 탈출
+                else
+                {
+                    break;
+                }
+            }
+
+            // 다음에 처리할 게 얼마나 남았는지 반환
             return receivePipe.TotalCount;
         }
     }
