@@ -1,4 +1,7 @@
-﻿// NetworkSteramExtensions
+﻿// 2021.02.22 편집
+// 학습용으로 만들어졌으므로 사용할 수 없음
+
+// NetworkSteramExtensions
 // 배경 지식: C#은 매개변수에 this를 던져줌으로 상속을 하지 않고도 클래스 내 override된 멤버 함수를 재정의하여 자유로이 확장할 수 있음
 // 각 함수들의 주석은 왜 확장됐는지 설명함
 

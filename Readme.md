@@ -1,4 +1,4 @@
-## Unity Networking practice
+# Unity Networking practice
 
 #### 2021.02.16
 
@@ -37,3 +37,19 @@ kcp Transport가 Telepathy의 후속작이라는 충격적인 사실을 알게 �
 네트워킹이 원활하게 진행되기 위해 많은 부분이 필요함을 알았다. Network Manager만 있으면 되는 줄 알았다. 다음 시간에는 Mirror Runtime 폴더에서 클래스들의 역할을 파악하기로 한다.
 
 [Update] .gitignore을 Unity용으로 수정
+
+
+
+## Redwood Network 사용 불가!
+
+Kcp Transport를 사용하도록 하자..
+
+Mirror의 Network Manager는 Redwood Transport 입력 시 Kcp Transport가 자동 생성 및 추가됨
+
+
+
+## 새로운 미니 게임 개발
+
+Mirror 네트워크를 사용한 타일을 클릭해 뒤집으면 색이 바뀌는 간단한 게임
+
+- 1:1과 Melee(개인전)으로 구성할 예정

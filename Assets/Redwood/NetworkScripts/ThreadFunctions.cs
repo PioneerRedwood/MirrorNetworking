@@ -1,4 +1,7 @@
-﻿// 중요!
+﻿// 2021.02.22 편집
+// 학습용으로 만들어졌으므로 사용할 수 없음
+
+// 중요!
 // 스레드 기능은 반드시 static으로 할 것
 // => Common.Send/ReceiveLoop 는 스레드 간에 상태를 공유하는게 쉽기 때문에 매우 위험함
 // => header, buffer, payload 등 이들은 static에서 non static으로 바뀐 뒤 예기치 않게 공유됨

@@ -1,4 +1,7 @@
-﻿// 해당 클래스는 Mirror의 Telepathy Server를 토대로 제작됨
+﻿// 2021.02.22 편집
+// 학습용으로 만들어졌으므로 사용할 수 없음
+
+// 해당 클래스는 Mirror의 Telepathy Server를 토대로 제작됨
 // Mirror의 Telepathy는 TCP 방식으로 MMORPG 같은 네트워크 규모를 위해 설계
 // 자세한 내용은 https://mirror-networking.com/docs/Articles/Transports/Telepathy.html
 

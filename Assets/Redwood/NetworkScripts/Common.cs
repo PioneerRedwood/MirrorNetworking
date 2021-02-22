@@ -1,4 +1,7 @@
-﻿// Server와 Client 공통으로 사용되는 부분
+﻿// 2021.02.22 편집
+// 학습용으로 만들어졌으므로 사용할 수 없음
+
+// Server와 Client 공통으로 사용되는 부분
 namespace Redwood
 {
     public abstract class Common
