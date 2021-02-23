@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using Mirror;
 
 namespace Redwood.GamePlay
 {
@@ -9,11 +10,12 @@ namespace Redwood.GamePlay
         None, White, Black, Red, Green, Blue
     }
 
-    public class Tile : Mirror.NetworkBehaviour
+    public class Tile : NetworkBehaviour
     {
         TileFlag flag = TileFlag.None;
         bool _isRollin = false;
 
+        [ServerCallback]
         public void OnTileClicked(PlayerTag tag)
         {
             if(!_isRollin)

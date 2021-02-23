@@ -42,9 +42,7 @@ kcp Transport가 Telepathy의 후속작이라는 충격적인 사실을 알게 �
 
 ## Redwood Network 사용 불가!
 
-Kcp Transport를 사용하도록 하자..
-
-Mirror의 Network Manager는 Redwood Transport 입력 시 Kcp Transport가 자동 생성 및 추가됨
+Kcp Transport를 사용하도록 하자.. Mirror의 Network Manager는 Redwood Transport 입력 시 Kcp Transport가 자동 생성 및 추가. 이에 일부 코드의 디렉터리를 수정 및 주석(deprecated, 사용 안함) 추가
 
 
 
@@ -53,3 +51,9 @@ Mirror의 Network Manager는 Redwood Transport 입력 시 Kcp Transport가 자�
 Mirror 네트워크를 사용한 타일을 클릭해 뒤집으면 색이 바뀌는 간단한 게임
 
 - 1:1과 Melee(개인전)으로 구성할 예정
+
+
+
+#### 2021.02.23
+
+멀티 에디터 [ParrelSync](https://github.com/VeriorPies/ParrelSync) 패키지 추가

@@ -8,6 +8,13 @@ namespace Redwood
         // player 구분 태그
         private PlayerTag _tag;
 
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+
+
+        }
+
         public void SetTag(PlayerTag tag)
         {
             _tag = tag;
