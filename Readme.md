@@ -58,8 +58,7 @@ Mirror 네트워크를 사용한 타일을 클릭해 뒤집으면 색이 바뀌�
 
 #### 2021.02.25
 
-![서버 / 클라이언트 진행 중](D:\UnityProject\MirrorNetworking\20210225_Update.png)
-
+서버 / 클라이언트 진행 중
 
 
 [NetworkManagerCallbacks](https://docs.unity3d.com/2019.3/Documentation/Manual/NetworkManagerCallbacks.html) 네트워크 매니저 콜백 함수(폐기된 UNet의 문서, 참고용)
