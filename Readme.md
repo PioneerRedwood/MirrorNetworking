@@ -52,8 +52,23 @@ Mirror 네트워크를 사용한 타일을 클릭해 뒤집으면 색이 바뀌�
 
 - 1:1과 Melee(개인전)으로 구성할 예정
 
-
-
 #### 2021.02.23
 
 멀티 에디터 [ParrelSync](https://github.com/VeriorPies/ParrelSync) 패키지 추가
+
+#### 2021.02.25
+
+서버 / 클라이언트 진행 중
+
+![image-20210225195952607](C:\Users\Redwood\AppData\Roaming\Typora\typora-user-images\image-20210225195952607.png)
+
+​													[왼쪽은 Host, 오른족은 Client]
+
+[NetworkManagerCallbacks](https://docs.unity3d.com/2019.3/Documentation/Manual/NetworkManagerCallbacks.html) 네트워크 매니저 콜백 함수(폐기된 UNet의 문서, 참고용)
+
+추가할 사항
+
+- 진영의 수가 2 이상모였을 때 모든 진영에서 준비 완료 신호 보내면 게임 시작하는 기능(진영은 최대 4개까지 추가할 예정)
+- 서버 측에서 타이머가 돌며 각 진영에서 활성화시킨 깃발의 수 표시
+- 서버 혹은 클라이언트 연결 해제시 처리
+

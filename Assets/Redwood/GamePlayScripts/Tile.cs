@@ -4,42 +4,81 @@ using Mirror;
 
 namespace Redwood.GamePlay
 {
-    public enum TileFlag
-    {
-        // 나중에 melee를 위해 enum을 다양하게 넣어둠
-        None, White, Black, Red, Green, Blue
-    }
-
     public class Tile : NetworkBehaviour
     {
-        TileFlag flag = TileFlag.None;
-        bool _isRollin = false;
+        private Flag _prevFlag = Flag.None;
 
-        [ServerCallback]
-        public void OnTileClicked(PlayerTag tag)
+        [SyncVar]
+        private bool _isRollin = false;
+
+        [SyncVar]
+        private Flag _currFlag = Flag.None;
+
+        public override void OnStartClient()
         {
-            if(!_isRollin)
+            base.OnStartClient();
+            if(isClientOnly && !IsInvoking(nameof(UpdateTileOnClient)))
             {
-                _isRollin = true;
-                StartCoroutine(nameof(Rollin), tag);
+                InvokeRepeating(nameof(UpdateTileOnClient), 0.0f, 0.1f);
             }
         }
 
-        IEnumerator Rollin(PlayerTag tag)
+        [Client]
+        void UpdateTileOnClient()
         {
+            switch (_currFlag)
+            {
+                case Flag.None:
+                    break;
+                case Flag.White:
+                    GetComponentInChildren<SpriteRenderer>().color = Color.red;
+                    break;
+                case Flag.Black:
+                    GetComponentInChildren<SpriteRenderer>().color = Color.blue;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void OnTileClicked(Flag newFlag)
+        {
+            if (!_isRollin)
+            {
+                _isRollin = true;
+                _prevFlag = _currFlag;
+                _currFlag = newFlag;
+                StartCoroutine(nameof(RollAndChange));
+            }
+        }
+
+        IEnumerator RollAndChange()
+        {
+            _isRollin = false;
+
+            switch (_currFlag)
+            {
+                case Flag.None:
+                    break;
+                case Flag.White:
+                    GetComponentInChildren<SpriteRenderer>().color = Color.red;
+                    break;
+                case Flag.Black:
+                    GetComponentInChildren<SpriteRenderer>().color = Color.blue;
+                    break;
+                default:
+                    break;
+            }
+
             yield return new WaitForSeconds(0.1f);
 
-            GetComponent<Animator>().SetBool("Set", true);
+            RPCOnRollin();
+        }
 
-            if (tag == PlayerTag.White)
-            {
-                GetComponentInChildren<SpriteRenderer>().color = Color.white;
-            }
-            else if(tag == PlayerTag.Black)
-            {
-                GetComponentInChildren<SpriteRenderer>().color = Color.black;
-            }
-            _isRollin = false;
+        [ClientRpc]
+        void RPCOnRollin()
+        {
+            GetComponent<Animator>().SetTrigger("Roll");
         }
     }
 }
