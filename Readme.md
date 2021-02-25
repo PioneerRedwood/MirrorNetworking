@@ -60,7 +60,7 @@ Mirror 네트워크를 사용한 타일을 클릭해 뒤집으면 색이 바뀌�
 
 서버 / 클라이언트 진행 중
 
-![image-20210225195952607](C:\Users\Redwood\AppData\Roaming\Typora\typora-user-images\image-20210225195952607.png)
+![](D:\UnityProject\MirrorNetworking\20210225_Update.png)
 
 ​													[왼쪽은 Host, 오른족은 Client]
 
