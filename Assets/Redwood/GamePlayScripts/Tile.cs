@@ -30,10 +30,12 @@ namespace Redwood.GamePlay
             {
                 case Flag.None:
                     break;
-                case Flag.White:
+                case Flag.Red:
                     GetComponentInChildren<SpriteRenderer>().color = Color.red;
                     break;
-                case Flag.Black:
+                case Flag.Green:
+                    break;
+                case Flag.Blue:
                     GetComponentInChildren<SpriteRenderer>().color = Color.blue;
                     break;
                 default:
@@ -60,10 +62,12 @@ namespace Redwood.GamePlay
             {
                 case Flag.None:
                     break;
-                case Flag.White:
+                case Flag.Red:
                     GetComponentInChildren<SpriteRenderer>().color = Color.red;
                     break;
-                case Flag.Black:
+                case Flag.Green:
+                    break;
+                case Flag.Blue:
                     GetComponentInChildren<SpriteRenderer>().color = Color.blue;
                     break;
                 default:
@@ -79,6 +83,15 @@ namespace Redwood.GamePlay
         void RPCOnRollin()
         {
             GetComponent<Animator>().SetTrigger("Roll");
+        }
+
+        [Server]
+        public void InitTile()
+        {
+            _currFlag = Flag.None;
+            _prevFlag = Flag.None;
+
+            GetComponentInChildren<SpriteRenderer>().color = Color.white;
         }
     }
 }

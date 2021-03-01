@@ -51,7 +51,13 @@ namespace Redwood.GamePlay
 
         #endregion
 
-
+        public void InitTiles()
+        {
+            foreach(Tile tile in GetComponentsInChildren<Tile>())
+            {
+                tile?.InitTile();
+            }
+        }
     }
 }
 
